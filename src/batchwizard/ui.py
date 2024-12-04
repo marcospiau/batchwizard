@@ -9,8 +9,14 @@ from rich.console import Console
 from rich.layout import Layout
 from rich.live import Live
 from rich.panel import Panel
-from rich.progress import (BarColumn, Progress, SpinnerColumn,
-                           TaskProgressColumn, TextColumn, TimeElapsedColumn)
+from rich.progress import (
+    BarColumn,
+    Progress,
+    SpinnerColumn,
+    TaskProgressColumn,
+    TextColumn,
+    TimeElapsedColumn,
+)
 from rich.table import Table
 from rich.text import Text
 
@@ -68,7 +74,9 @@ class BatchWizardUI:
         color = (
             "green"
             if status == "completed"
-            else "red" if status in ["failed", "expired", "cancelled"] else "yellow"
+            else "red"
+            if status in ["failed", "expired", "cancelled"]
+            else "yellow"
         )
         self.jobs[job_id] = (f"[{color}]{status}", progress)
         self.job_table = self.create_job_table()
@@ -128,7 +136,11 @@ class BatchWizardUI:
         layout["body"]["sidebar"]["logs"].update(log_panel)
 
     async def run_processing(
-        self, processor: BatchProcessor, input_paths: List[Path], output_dir: Path
+        self,
+        processor: BatchProcessor,
+        input_paths: List[Path],
+        output_dir: Path,
+        endpoint: str = "/v1/chat/completions",
     ):
         layout = self.create_layout()
         overall_progress, job_progress = self.create_progress_bars()
@@ -173,7 +185,7 @@ class BatchWizardUI:
                 file_id = await processor.upload_file(input_file)
                 overall_progress.update(upload_task, advance=1)
                 if file_id:
-                    batch_job = await processor.create_batch_job(file_id)
+                    batch_job = await processor.create_batch_job(file_id, endpoint)
                     if batch_job:
                         self.update_job_status(batch_job.id, batch_job.status, "0%")
                         self.add_log(f"Job created: {batch_job.id}")
