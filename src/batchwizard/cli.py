@@ -26,6 +26,11 @@ def process(
     output_directory: Optional[Path] = typer.Option(
         None, help="Directory to store output files"
     ),
+    embeddings: bool = typer.Option(
+        False,
+        "--embeddings",
+        help="Use the embeddings endpoint instead of chat completions",
+    ),
     max_concurrent_jobs: int = typer.Option(
         5, help="Maximum number of concurrent jobs"
     ),
@@ -52,14 +57,17 @@ def process(
     processor = BatchProcessor()
     ui = BatchWizardUI(Console())
 
+    endpoint = "/v1/embeddings" if embeddings else "/v1/chat/completions"
+
     async def run_and_close():
         try:
-            await ui.run_processing(processor, input_paths, output_directory)
+            await ui.run_processing(
+                processor, input_paths, output_directory, endpoint=endpoint
+            )
         finally:
             await processor.close()
 
     asyncio.run(run_and_close())
-
 
 
 @app.command()

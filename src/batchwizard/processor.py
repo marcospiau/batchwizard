@@ -32,18 +32,25 @@ class BatchProcessor:
             logger.error(f"Error uploading file {file_path.name}: {str(e)}")
             return None
 
-    async def create_batch_job(self, input_file_id: str) -> Optional[BatchJob]:
+    async def create_batch_job(self, input_file_id: str, endpoint: str = "/v1/chat/completions") -> Optional[BatchJob]:
         try:
+            # Validate endpoint
+            valid_endpoints = ["/v1/chat/completions", "/v1/embeddings"]
+            if endpoint not in valid_endpoints:
+                logger.error(f"Invalid endpoint: {endpoint}. Must be one of {valid_endpoints}")
+                return None
+
             batch_job = await self.client.batches.create(
                 input_file_id=input_file_id,
-                endpoint="/v1/chat/completions",
+                endpoint=endpoint,
                 completion_window="24h",
             )
-            logger.info(f"Created batch job with ID: {batch_job.id}")
+            logger.info(f"Created batch job with ID: {batch_job.id} using endpoint {endpoint}")
             return BatchJob(
                 id=batch_job.id,
                 status=self.normalize_status(batch_job.status),
                 input_file_id=input_file_id,
+                endpoint=endpoint,
             )
         except Exception as e:
             logger.error(f"Error creating batch job: {str(e)}")

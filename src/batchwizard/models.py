@@ -10,6 +10,7 @@ class BatchJob(BaseModel):
     status: str
     input_file_id: str
     output_file_id: Optional[str] = None
+    endpoint: str = "/v1/chat/completions"
 
 
 class BatchJobResult(BaseModel):
